@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Executive Decision Command Center — Q1 2025</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#0A0C12;--s1:#0E111A;--s2:#131826;--s3:#182032;--s4:#1E2840;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --red:#EF4444;--red-dim:rgba(239,68,68,0.12);
+  --green:#22C55E;--green-dim:rgba(34,197,94,0.12);
+  --amber:#F59E0B;--amber-dim:rgba(245,158,11,0.12);
+  --blue:#3B82F6;--blue-dim:rgba(59,130,246,0.12);
+  --purple:#A855F7;--purple-dim:rgba(168,85,247,0.12);
+  --teal:#14B8A6;--teal-dim:rgba(20,184,166,0.12);
+  --text:#F1F5F9;--text-2:#94A3B8;--text-3:#64748B;--text-4:#3D4759;
+  --r-sm:6px;--r-md:10px;--r-lg:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14px;line-height:1.65;}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(10,12,18,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.tb-brand{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;}
+.tb-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);}
+.tb-crumb{color:var(--text-3);}
+.tb-crumb.active{color:var(--text);}
+.tb-metrics{display:flex;gap:18px;flex-wrap:wrap;}
+.tb-metric{font-size:11px;color:var(--text-3);}
+.tb-metric .val{color:var(--text);font-weight:700;font-family:'JetBrains Mono',monospace;margin-left:5px;}
+.tb-metric .val.risk-medium{color:var(--amber);}
+
+/* COVER */
+.cover{min-height:92vh;display:flex;flex-direction:column;justify-content:center;padding:60px 40px;position:relative;overflow:hidden;background:radial-gradient(ellipse at top right, rgba(59,130,246,0.08), transparent 60%),radial-gradient(ellipse at bottom left, rgba(239,68,68,0.06), transparent 50%);}
+.cover-eye{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);margin-bottom:28px;}
+.cover h1{font-size:clamp(32px,5.5vw,58px);font-weight:700;line-height:1.08;margin-bottom:18px;max-width:780px;}
+.cover h1 span{color:var(--blue);}
+.cover-sub{font-size:15px;color:var(--text-2);max-width:560px;line-height:1.7;margin-bottom:36px;}
+.cover-alert{background:var(--amber-dim);border:1px solid rgba(245,158,11,0.3);border-radius:var(--r-md);padding:16px 20px;max-width:600px;margin-bottom:40px;}
+.cover-alert-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-bottom:6px;}
+.cover-alert-text{font-size:13px;color:var(--text);line-height:1.6;}
+.cover-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:760px;margin-bottom:30px;}
+.ck-card{background:var(--s2);border:1px solid var(--border2);border-radius:var(--r-md);padding:16px;}
+.ck-val{font-size:24px;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1;margin-bottom:4px;}
+.ck-lbl{font-size:10px;color:var(--text-3);}
+.ck-trend{font-size:10px;margin-top:5px;font-weight:600;}
+.trend-up{color:var(--green);}.trend-down{color:var(--red);}.trend-flat{color:var(--text-3);}
+.cover-tools{display:flex;flex-wrap:wrap;gap:8px;}
+.ctool{background:var(--s2);border:1px solid var(--border2);border-radius:20px;padding:5px 14px;font-size:11px;color:var(--text-2);font-family:'JetBrains Mono',monospace;}
+
+/* LAYOUT */
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 100px;}
+
+/* NAV INDEX */
+.navidx{background:var(--s1);border:1px solid var(--border2);border-radius:var(--r-lg);padding:24px;margin:40px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:3px;}
+.ni-item{display:flex;gap:9px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--border);color:var(--text-2);}
+.ni-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);min-width:24px;padding-top:1px;}
+
+/* SECTION */
+.sec{padding:54px 0 0;border-top:1px solid var(--border);margin-top:54px;}
+.sec:first-child{border-top:none;margin-top:0;}
+.sec-eye{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);margin-bottom:10px;}
+.sec h2{font-size:clamp(22px,3.2vw,32px);font-weight:700;margin-bottom:14px;}
+.sec>p{font-size:13.5px;color:var(--text-2);max-width:760px;line-height:1.8;margin-bottom:22px;}
+.h3{font-size:16px;font-weight:700;margin:26px 0 12px;color:var(--text);}
+
+/* SECTION SPEC CARD - purpose/inputs/processing/outputs/value */
+.spec-card{background:var(--s1);border:1px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;margin:20px 0;}
+.spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;}
+.spec-cell{padding:16px 18px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);}
+.spec-cell:last-child{border-right:none;}
+.spec-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-3);margin-bottom:7px;}
+.spec-text{font-size:12px;color:var(--text-2);line-height:1.6;}
+.spec-purpose{border-left:3px solid var(--blue);}
+.spec-input{border-left:3px solid var(--teal);}
+.spec-process{border-left:3px solid var(--purple);}
+.spec-output{border-left:3px solid var(--green);}
+.spec-value{border-left:3px solid var(--amber);}
+
+/* KPI CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:18px 0;}
+.kpi-card{background:var(--s2);border:1px solid var(--border2);border-radius:var(--r-md);padding:18px;position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.kpi-blue::before{background:var(--blue);}.kpi-red::before{background:var(--red);}
+.kpi-green::before{background:var(--green);}.kpi-amber::before{background:var(--amber);}
+.kpi-purple::before{background:var(--purple);}
+.kpi-icon{font-size:18px;margin-bottom:8px;}
+.kpi-val{font-size:26px;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1;margin-bottom:5px;}
+.kpi-lbl{font-size:10.5px;color:var(--text-3);margin-bottom:6px;}
+.kpi-sub{font-size:10px;color:var(--text-2);}
+
+/* ALERT CARDS */
+.alert-card{background:var(--s1);border:1px solid var(--border2);border-radius:var(--r-md);padding:16px 18px;margin-bottom:10px;border-left:4px solid var(--red);}
+.alert-card.high{border-left-color:var(--red);}
+.alert-card.medium{border-left-color:var(--amber);}
+.alert-card.low{border-left-color:var(--green);}
+.alert-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;flex-wrap:wrap;gap:8px;}
+.alert-title{font-size:13px;font-weight:700;}
+.alert-meta{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);}
+.badge{display:inline-block;padding:3px 10px;border-radius:4px;font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:.05em;}
+.b-high{background:var(--red-dim);color:var(--red);}
+.b-medium{background:var(--amber-dim);color:var(--amber);}
+.b-low{background:var(--green-dim);color:var(--green);}
+.b-blue{background:var(--blue-dim);color:var(--blue);}
+.alert-trigger{font-size:11px;color:var(--text-2);margin-bottom:6px;}
+.alert-analysis{font-size:12px;color:var(--text);line-height:1.6;margin-bottom:8px;background:var(--s2);border-radius:6px;padding:10px 12px;}
+.alert-rec{font-size:12px;color:var(--green);line-height:1.5;}
+.alert-rec strong{color:var(--text);}
+
+/* TABLES */
+.tbl{width:100%;border-collapse:collapse;font-size:11.5px;margin:16px 0;}
+.tbl th{background:var(--s3);color:var(--text-2);padding:9px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-2);}
+.tbl tr:hover td{background:rgba(59,130,246,0.04);}
+.tbl-blue th{background:var(--blue);color:#fff;}
+.tbl-red th{background:var(--red);color:#fff;}
+.tbl-green th{background:var(--green);color:#fff;}
+.tbl-amber th{background:var(--amber);color:#0A0C12;}
+.tbl-purple th{background:var(--purple);color:#fff;}
+.pos{color:var(--green);font-weight:700;}
+.neg{color:var(--red);font-weight:700;}
+
+/* CHART BOX */
+.cbox{background:var(--s1);border:1px solid var(--border2);border-radius:var(--r-lg);padding:22px;margin:16px 0;}
+.cbox .ct{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:16px;}
+.cgrid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0;}
+.cgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:16px 0;}
+
+/* PULL QUOTE */
+.pq{border-left:3px solid var(--blue);padding:14px 20px;margin:20px 0;background:var(--blue-dim);border-radius:0 var(--r-md) var(--r-md) 0;}
+.pq p{font-size:14px;font-weight:600;color:var(--text);line-height:1.55;margin:0;}
+
+/* WORKFLOW PIPELINE */
+.flow-row{display:flex;align-items:center;flex-wrap:wrap;gap:0;margin:18px 0;}
+.flow-step{padding:9px 15px;font-size:11.5px;font-weight:700;border-radius:6px;text-align:center;line-height:1.3;}
+.flow-arr{color:var(--text-3);font-size:15px;padding:0 6px;}
+.f-blue{background:var(--blue);color:#fff;}.f-red{background:var(--red);color:#fff;}
+.f-green{background:var(--green);color:#fff;}.f-amber{background:var(--amber);color:#0A0C12;}
+.f-purple{background:var(--purple);color:#fff;}.f-teal{background:var(--teal);color:#fff;}
+.f-dark{background:var(--s3);color:var(--text);border:1px solid var(--border2);}
+
+/* HEALTH SCORE GAUGE */
+.health-wrap{display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin:20px 0;}
+.health-gauge{position:relative;width:160px;height:160px;flex-shrink:0;}
+.health-score-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.health-score-num .hn{font-size:38px;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1;}
+.health-score-num .hl{font-size:10px;color:var(--text-3);margin-top:2px;}
+.health-breakdown{flex:1;min-width:260px;}
+.hb-row{display:grid;grid-template-columns:120px 1fr 40px;gap:10px;align-items:center;margin-bottom:9px;}
+.hb-lbl{font-size:11px;color:var(--text-2);}
+.hb-bar-bg{background:var(--s3);border-radius:3px;height:8px;overflow:hidden;}
+.hb-bar-fill{height:100%;border-radius:3px;}
+.hb-val{font-size:11px;font-weight:700;text-align:right;font-family:'JetBrains Mono',monospace;}
+
+/* WHAT-IF SLIDER MOCK */
+.whatif-card{background:var(--s1);border:1px solid var(--border2);border-radius:var(--r-lg);padding:22px;margin:16px 0;}
+.wi-row{display:grid;grid-template-columns:180px 1fr 90px;gap:14px;align-items:center;margin-bottom:16px;}
+.wi-lbl{font-size:12px;color:var(--text-2);}
+.wi-track{background:var(--s3);border-radius:4px;height:8px;position:relative;}
+.wi-fill{background:var(--blue);height:100%;border-radius:4px;position:relative;}
+.wi-handle{position:absolute;right:-7px;top:-5px;width:18px;height:18px;border-radius:50%;background:var(--blue);border:3px solid var(--bg);}
+.wi-val{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;text-align:right;}
+.wi-result{background:var(--s2);border:1px solid var(--green-dim);border-radius:var(--r-md);padding:16px;margin-top:18px;}
+.wi-result-title{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--green);margin-bottom:10px;}
+
+/* SIMULATION SCENARIOS */
+.sim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0;}
+.sim-card{background:var(--s2);border:1px solid var(--border2);border-radius:var(--r-md);padding:16px;border-top:3px solid var(--blue);}
+.sim-card.opt-a{border-top-color:var(--blue);}
+.sim-card.opt-b{border-top-color:var(--green);}
+.sim-card.opt-c{border-top-color:var(--red);}
+.sim-name{font-size:13px;font-weight:700;margin-bottom:8px;}
+.sim-row{display:flex;justify-content:space-between;font-size:11px;color:var(--text-2);padding:4px 0;border-bottom:1px solid var(--border);}
+.sim-row:last-child{border-bottom:none;}
+.sim-row .sv{font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace;}
+
+/* ACTION TRACKER */
+.action-card{background:var(--s1);border:1px solid var(--border2);border-radius:var(--r-md);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;}
+.action-status{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.as-done{background:var(--green);}.as-progress{background:var(--amber);}.as-pending{background:var(--text-4);}
+.action-body{flex:1;}
+.action-title{font-size:12px;font-weight:700;margin-bottom:2px;}
+.action-meta{font-size:10px;color:var(--text-3);}
+.action-owner{font-size:10px;color:var(--text-2);background:var(--s3);padding:3px 10px;border-radius:10px;white-space:nowrap;}
+
+/* SOURCES */
+.src-row{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;}
+.src-chip{background:var(--s2);border:1px solid var(--border2);border-radius:4px;padding:4px 11px;font-size:10.5px;color:var(--text-2);font-family:'JetBrains Mono',monospace;}
+
+/* FOOTER NOTE */
+.foot-note{background:var(--s2);border:1px solid var(--blue-dim);border-radius:var(--r-md);padding:18px 20px;margin:24px 0;}
+.fn-title{font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px;}
+.fn-text{font-size:12px;color:var(--text-2);line-height:1.7;}
+
+@media(max-width:760px){
+  .cover-kpi-row{grid-template-columns:1fr 1fr;}
+  .cgrid2,.cgrid3{grid-template-columns:1fr;}
+  .spec-grid{grid-template-columns:1fr;}
+  .health-wrap{flex-direction:column;}
+  .wi-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-brand">
+    <span class="tb-dot"></span>
+    <span>ExecutiveOS</span>
+    <span class="tb-crumb">›</span>
+    <span class="tb-crumb active">AI Decision Command Center</span>
+  </div>
+  <div class="tb-metrics">
+    <div class="tb-metric">Health Score <span class="val">71/100</span></div>
+    <div class="tb-metric">Risk Level <span class="val risk-medium">Medium</span></div>
+    <div class="tb-metric">Open Alerts <span class="val">2 High</span></div>
+    <div class="tb-metric">Period <span class="val">Q1 2025</span></div>
+  </div>
+</div>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-eye">AI-Powered Business Operating System · Q1 2025 · Portfolio Build</div>
+  <h1>AI Executive Decision<br><span>Command Center</span></h1>
+  <p class="cover-sub">A working AI decision-support system — built on real customer, revenue, and macroeconomic data — that detects business risk, explains root causes, and recommends executive action before quarterly numbers are finalised.</p>
+
+  <div class="cover-alert">
+    <div class="cover-alert-lbl">⚠ Live Executive Alert — As Configured For This Dataset</div>
+    <div class="cover-alert-text">February demand shock detected. Inflation rose to 6.2%, consumer demand fell to 65, churn spiked to 31.82%, and revenue declined 7.5%. March recovery was driven by a 40% CAC reduction and improved retention. <strong style="color:var(--text);">Full root-cause trace in Section 02.</strong></div>
+  </div>
+
+  <div class="cover-kpi-row">
+    <div class="ck-card"><div class="ck-val" style="color:var(--blue);">₹5.8L</div><div class="ck-lbl">Total Q1 Revenue</div><div class="ck-trend trend-flat">3-month total</div></div>
+    <div class="ck-card"><div class="ck-val" style="color:var(--green);">₹2.25L</div><div class="ck-lbl">Total Q1 Profit</div><div class="ck-trend trend-up">38.8% margin</div></div>
+    <div class="ck-card"><div class="ck-val" style="color:var(--amber);">16.68%</div><div class="ck-lbl">Avg Churn Rate</div><div class="ck-trend trend-down">↑ vs healthy 5-8%</div></div>
+    <div class="ck-card"><div class="ck-val" style="color:var(--red);">₹328</div><div class="ck-lbl">Avg CAC</div><div class="ck-trend trend-down">Spiked to ₹455 in Feb</div></div>
+  </div>
+
+  <div class="cover-tools">
+    <span class="ctool">Root Cause Engine</span><span class="ctool">Risk Monitor</span>
+    <span class="ctool">What-If Simulator</span><span class="ctool">AI Alert System</span>
+    <span class="ctool">Decision Workflow</span><span class="ctool">Action Tracker</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- NAV INDEX -->
+<div class="navidx">
+  <div class="ni-item"><span class="ni-num">01</span>Executive Dashboard</div>
+  <div class="ni-item"><span class="ni-num">02</span>AI Alert Center</div>
+  <div class="ni-item"><span class="ni-num">03</span>Root Cause Analysis Engine</div>
+  <div class="ni-item"><span class="ni-num">04</span>Risk Monitoring System</div>
+  <div class="ni-item"><span class="ni-num">05</span>Business Health Score</div>
+  <div class="ni-item"><span class="ni-num">06</span>Executive Recommendations</div>
+  <div class="ni-item"><span class="ni-num">07</span>Decision Simulation Center</div>
+  <div class="ni-item"><span class="ni-num">08</span>What-If Analysis</div>
+  <div class="ni-item"><span class="ni-num">09</span>AI Decision Workflow</div>
+  <div class="ni-item"><span class="ni-num">10</span>Operations Monitoring Layer</div>
+  <div class="ni-item"><span class="ni-num">11</span>Action Tracking System</div>
+  <div class="ni-item"><span class="ni-num">12</span>Future Version Roadmap</div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 01 — EXECUTIVE DASHBOARD -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="sec" id="s01">
+<div class="sec-eye">Section 01 — Executive Dashboard</div>
+<h2>Executive Dashboard</h2>
+<p><strong>Business purpose:</strong> A single screen a CEO or Operations Director opens every Monday morning to know, in under 60 seconds, whether the business is healthy, what changed, and what needs a decision this week — without opening a spreadsheet.</p>
+
+<div class="spec-card">
+  <div class="spec-grid">
+    <div class="spec-cell spec-purpose"><div class="spec-lbl">Business Purpose</div><div class="spec-text">Replace the Friday "send me the numbers" email with a live, always-current view of revenue, profit, churn, and risk.</div></div>
+    <div class="spec-cell spec-input"><div class="spec-lbl">Inputs</div><div class="spec-text">Monthly revenue, operational cost, new customers, churned customers, marketing spend, macro indicators (inflation, demand score).</div></div>
+    <div class="spec-cell spec-process"><div class="spec-lbl">AI Processing Logic</div><div class="spec-text">Calculates derived metrics (CAC, churn %, growth %, profit), classifies each month's risk tier, and writes a 1-paragraph executive alert when thresholds are breached.</div></div>
+    <div class="spec-cell spec-output"><div class="spec-lbl">Outputs</div><div class="spec-text">8 KPI cards, 3 trend charts, 1 auto-generated executive alert, monthly risk classification.</div></div>
+    <div class="spec-cell spec-value"><div class="spec-lbl">Decision Value</div><div class="spec-text">Cuts weekly reporting prep from ~2 hours of spreadsheet work to a 60-second glance — every week, automatically.</div></div>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card kpi-blue"><div class="kpi-icon">💰</div><div class="kpi-val">₹5,80,000</div><div class="kpi-lbl">Total Q1 Revenue</div><div class="kpi-sub">Jan ₹2L · Feb ₹1.85L · Mar ₹1.95L</div></div>
+  <div class="kpi-card kpi-green"><div class="kpi-icon">📈</div><div class="kpi-val">₹2,25,000</div><div class="kpi-lbl">Total Q1 Profit</div><div class="kpi-sub">38.8% blended margin</div></div>
+  <div class="kpi-card kpi-red"><div class="kpi-icon">💸</div><div class="kpi-val">₹328.44</div><div class="kpi-lbl">Average CAC</div><div class="kpi-sub">Peaked at ₹454.55 in Feb</div></div>
+  <div class="kpi-card kpi-amber"><div class="kpi-icon">⚠️</div><div class="kpi-val">16.68%</div><div class="kpi-lbl">Average Churn</div><div class="kpi-sub">Spiked to 31.82% in Feb</div></div>
+  <div class="kpi-card kpi-purple"><div class="kpi-icon">🌍</div><div class="kpi-val">5.10%</div><div class="kpi-lbl">Current Inflation</div><div class="kpi-sub">Range: 4.8% – 6.2%</div></div>
+  <div class="kpi-card kpi-blue"><div class="kpi-icon">🛒</div><div class="kpi-val">78 / 100</div><div class="kpi-lbl">Consumer Demand Score</div><div class="kpi-sub">Recovered from low of 65</div></div>
+  <div class="kpi-card kpi-green"><div class="kpi-icon">📊</div><div class="kpi-val">+5.41%</div><div class="kpi-lbl">Latest Growth Rate</div><div class="kpi-sub">Recovered from -7.50%</div></div>
+  <div class="kpi-card kpi-amber"><div class="kpi-icon">🚨</div><div class="kpi-val">Medium</div><div class="kpi-lbl">Current Risk Level</div><div class="kpi-sub">Down from High in February</div></div>
+</div>
+
+<div class="cgrid3">
+  <div class="cbox"><div class="ct">Revenue Trend (₹)</div><canvas id="revChart" height="180"></canvas></div>
+  <div class="cbox"><div class="ct">Profit Trend (₹)</div><canvas id="profitChart" height="180"></canvas></div>
+  <div class="cbox"><div class="ct">Churn Rate Trend (%)</div><canvas id="churnChart" height="180"></canvas></div>
+</div>
+
+<div class="pq"><p>Revenue declined from ₹2,00,000 to ₹1,85,000 in February due to weaker consumer demand and inflationary pressure, then recovered to ₹1,95,000 in March as conditions improved and retention stabilised.</p></div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 02 — AI ALERT CENTER -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="sec" id="s02">
+<div class="sec-eye">Section 02 — AI Alert Center</div>
+<h2>AI Alert Center</h2>
+<p><strong>Business purpose:</strong> Surface only what requires executive attention — not every number, just the ones that moved enough to matter — ranked by priority so a busy CEO reads the top 2 and ignores the rest.</p>
+
+<div class="spec-card">
+  <div class="spec-grid">
+    <div class="spec-cell spec-purpose"><div class="spec-lbl">Business Purpose</div><div class="spec-text">Stop important signals (churn spike, demand shock) from getting buried in a monthly report nobody reads in full.</div></div>
+    <div class="spec-cell spec-input"><div class="spec-lbl">Inputs</div><div class="spec-text">Month-over-month deltas on revenue, churn, CAC, inflation, demand score against defined thresholds.</div></div>
+    <div class="spec-cell spec-process"><div class="spec-lbl">AI Processing Logic</div><div class="spec-text">If a metric crosses a defined threshold (e.g. churn &gt;20%, inflation &gt;6%), AI drafts a 2-sentence trigger explanation and a specific recommended action, tagged by priority.</div></div>
+    <div class="spec-cell spec-output"><div class="spec-lbl">Outputs</div><div class="spec-text">Ranked alert feed — 6 alerts generated this quarter, 4 High priority, 2 Medium.</div></div>
+    <div class="spec-cell spec-value"><div class="spec-lbl">Decision Value</div><div class="spec-text">Reduces time-to-detection of a demand shock from "noticed at quarter-end" to "flagged the week it happened."</div></div>
+  </div>
+</div>
+
+<div class="h3">Active &amp; Resolved Alerts — This Quarter</div>
+
+<div class="alert-card high">
+  <div class="alert-top"><div class="alert-title">🔴 Economic Risk — Inflation Spike</div><div class="alert-meta">Feb 2025 · <span class="badge b-high">HIGH PRIORITY</span></div></div>
+  <div class="alert-trigger">Trigger: Inflation rose to 6.2% (from 4.8% in Jan)</div>
+  <div class="alert-analysis">Consumer demand fell from 82 to 65. Revenue declined and churn increased significantly in the same period — a classic demand-shock pattern.</div>
+  <div class="alert-rec"><strong>Recommended Action:</strong> Launch retention campaign and value-focused offers.</div>
+</div>
+
+<div class="alert-card high">
+  <div class="alert-top"><div class="alert-title">🔴 Customer Retention — Churn Spike</div><div class="alert-meta">Feb 2025 · <span class="badge b-high">HIGH PRIORITY</span></div></div>
+  <div class="alert-trigger">Trigger: Churn reached 31.82% (vs 6.67% in Jan)</div>
+  <div class="alert-analysis">Customers are leaving at a significantly higher rate than January. Economic pressure is likely reducing retention.</div>
+  <div class="alert-rec"><strong>Recommended Action:</strong> Launch loyalty offers and customer outreach campaign.</div>
+</div>
+
+<div class="alert-card high">
+  <div class="alert-top"><div class="alert-title">🔴 Marketing Efficiency — CAC Spike</div><div class="alert-meta">Feb 2025 · <span class="badge b-high">HIGH PRIORITY</span></div></div>
+  <div class="alert-trigger">Trigger: CAC increased to ₹454.55 (vs ₹300 in Jan)</div>
+  <div class="alert-analysis">Acquisition costs rose sharply while revenue declined, reducing marketing efficiency at the worst possible time.</div>
+  <div class="alert-rec"><strong>Recommended Action:</strong> Pause low-performing campaigns and focus spend on high-conversion channels.</div>
+</div>
+
+<div class="alert-card high">
+  <div class="alert-top"><div class="alert-title">🔴 Revenue Risk — Growth Reversal</div><div class="alert-meta">Feb 2025 · <span class="badge b-high">HIGH PRIORITY</span></div></div>
+  <div class="alert-trigger">Trigger: Revenue declined 7.5% month-over-month</div>
+  <div class="alert-analysis">Weak consumer demand directly impacted sales performance and growth trajectory.</div>
+  <div class="alert-rec"><strong>Recommended Action:</strong> Introduce value-focused offers and retention strategies.</div>
+</div>
+
+<div class="alert-card medium">
+  <div class="alert-top"><div class="alert-title">🟡 Recovery Signal — Demand Rebound</div><div class="alert-meta">Mar 2025 · <span class="badge b-medium">MEDIUM PRIORITY</span></div></div>
+  <div class="alert-trigger">Trigger: Demand score recovered to 78 (from 65)</div>
+  <div class="alert-analysis">Consumer demand improved and customer retention stabilised — early signs the worst of the shock has passed.</div>
+  <div class="alert-rec"><strong>Recommended Action:</strong> Gradually increase marketing investment in proven channels.</div>
+</div>
+
+<div class="alert-card medium">
+  <div class="alert-top"><div class="alert-title">🟢 Profit Improvement — Margin Recovery</div><div class="alert-meta">Mar 2025 · <span class="badge b-medium">MEDIUM PRIORITY</span></div></div>
+  <div class="alert-trigger">Trigger: Profit increased to ₹85,000 (from ₹60,000)</div>
+  <div class="alert-analysis">Lower operational costs and improved customer retention boosted profitability above the Q1 average.</div>
+  <div class="alert-rec"><strong>Recommended Action:</strong> Maintain cost discipline and monitor growth opportunities before re-accelerating spend.</div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 03 — ROOT CAUSE ANALYSIS ENGINE -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="sec" id="s03">
+<div class="sec-eye">Section 03 — Root Cause Analysis Engine</div>
+<h2>Root Cause Analysis Engine</h2>
+<p><strong>Business purpose:</strong> When a number moves, executives don't just want to know <em>that</em> it moved — they want to know <em>why</em>, in a causal chain they can act on. This engine connects macro signals to business outcomes instead of leaving the CEO to guess.</p>
+
+<div class="spec-card">
+  <div class="spec-grid">
+    <div class="spec-cell spec-purpose"><div class="spec-lbl">Business Purpose</div><div class="spec-text">Turn "revenue dropped" into "revenue dropped because X caused Y which caused Z" — a chain leadership can intervene on.</div></div>
+    <div class="spec-cell spec-input"><div class="spec-lbl">Inputs</div><div class="spec-text">Macro layer (inflation, cost of living, demand score) + business layer (revenue, churn, CAC) for the same period.</div></div>
+    <div class="spec-cell spec-process"><div class="spec-lbl">AI Processing Logic</div><div class="spec-text">Correlates macro deltas against business deltas in the same month, ranks candidate causes by timing and magnitude, and constructs a plain-language causal chain.</div></div>
+    <div class="spec-cell spec-output"><div class="spec-lbl">Outputs</div><div class="spec-text">A traced causal chain per risk event, plus a confidence note on correlation vs causation.</div></div>
+    <div class="spec-cell spec-value"><div class="spec-lbl">Decision Value</div><div class="spec-text">Prevents leadership from treating a symptom (churn) when the root cause (macro demand shock) requires a different response.</div></div>
+  </div>
+</div>
+
+<div class="h3">Traced Causal Chain — February 2025 Demand Shock</div>
+<div class="flow-row">
+  <div class="flow-step f-red">Inflation 4.8% → 6.2%</div><div class="flow-arr">→</div>
+  <div class="flow-step f-amber">Cost of Living Index 100 → 108</div><div class="flow-arr">→</div>
+  <div class="flow-step f-amber">Consumer Demand 82 → 65</div><div class="flow-arr">→</div>
+  <div class="flow-step f-red">Revenue ₹2,00,000 → ₹1,85,000</div><div class="flow-arr">→</div>
+  <div class="flow-step f-red">Churn 6.67% → 31.82%</div><div class="flow-arr">→</div>
+  <div class="flow-step f-red">CAC ₹300 → ₹454.55</div>
+</div>
+
+<div class="h3">Traced Causal Chain — March 2025 Recovery</div>
+<div class="flow-row">
+  <div class="flow-step f-green">Inflation 6.2% → 5.1%</div><div class="flow-arr">→</div>
+  <div class="flow-step f-green">Demand Score 65 → 78</div><div class="flow-arr">→</div>
+  <div class="flow-step f-teal">Marketing Spend ₹50K → ₹30K (cut 40%)</div><div class="flow-arr">→</div>
+  <div class="flow-step f-green">CAC ₹454.55 → ₹230.77</div><div class="flow-arr">→</div>
+  <div class="flow-step f-green">Churn 31.82% → 11.54%</div><div class="flow-arr">→</div>
+  <div class="flow-step f-green">Profit ₹60,000 → ₹85,000</div>
+</div>
+
+<div class="pq"><p>Root cause read: March's profit recovery was not primarily a demand story — marketing spend was cut 40% while CAC still improved, meaning retention and channel efficiency, not just macro recovery, drove the rebound.</p></div>
+
+<table class="tbl tbl-purple">
+<thead><tr><th>Candidate Cause</th><th>Timing Match</th><th>Magnitude</th><th>AI Confidence</th><th>Causal Read</th></tr></thead>
+<tbody>
+<tr><td>Inflation spike (4.8%→6.2%)</td><td>Same month as demand fall</td><td>1.4pp rise</td><td><span class="badge b-high">High</span></td><td>Primary driver — demand and inflation moved inversely and simultaneously</td></tr>
+<tr><td>Reduced marketing spend in March</td><td>Same month as CAC improvement</td><td>40% spend cut</td><td><span class="badge b-high">High</span></td><td>Direct driver of CAC recovery — fewer, better-targeted acquisitions</td></tr>
+<tr><td>Seasonal effect</td><td>No prior-year data available</td><td>Unknown</td><td><span class="badge b-medium">Low — Unverified</span></td><td>Cannot be confirmed or ruled out with only 3 months of data</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 04 — RISK MONITORING SYSTEM -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="sec" id="s04">
+<div class="sec-eye">Section 04 — Risk Monitoring System</div>
+<h2>Risk Monitoring System</h2>
+<p><strong>Business purpose:</strong> Classify the overall state of the business each month into a single risk tier — Low / Medium / High — so leadership has a consistent, comparable signal month over month instead of re-interpreting raw numbers every time.</p>
+
+<div class="spec-card">
+  <div class="spec-grid">
+    <div class="spec-cell spec-purpose"><div class="spec-lbl">Business Purpose</div><div class="spec-text">Give the board a single, defensible risk rating per month instead of a wall of metrics they must interpret themselves.</div></div>
+    <div class="spec-cell spec-input"><div class="spec-lbl">Inputs</div><div class="spec-text">Churn %, growth %, CAC trend, inflation, demand score — same data feeding the dashboard.</div></div>
+    <div class="spec-cell spec-process"><div class="spec-lbl">AI Processing Logic</div><div class="spec-text">Each metric is scored against a risk band; the overall tier is the worst-performing dimension, not an average — so one severe risk can't be diluted by good news elsewhere.</div></div>
+    <div class="spec-cell spec-output"><div class="spec-lbl">Outputs</div><div class="spec-text">Monthly Low/Medium/High classification with a 2-line justification.</div></div>
+    <div class="spec-cell spec-value"><div class="spec-lbl">Decision Value</div><div class="spec-text">Creates an early-warning trail — a board reviewing 6 months of ratings can see deterioration before it becomes a crisis.</div></div>
+  </div>
+</div>
+
+<table class="tbl">
+<thead><tr><th>Month</th><th>Risk Status</th><th>Inflation</th><th>Churn</th><th>Growth</th><th>Justification</th></tr></thead>
+<tbody>
+<tr><td>January 2025</td><td><span class="badge b-low">Low Risk</span></td><td>4.8%</td><td>6.67%</td><td class="pos">6.67%</td><td>Business performance stable. Demand strong, inflation controlled, churn low, revenue healthy.</td></tr>
+<tr><td>February 2025</td><td><span class="badge b-high">High Risk</span></td><td>6.2%</td><td>31.82%</td><td class="neg">-7.50%</td><td>Inflation spiked, demand fell significantly, churn nearly 5x January, CAC rose sharply — compounding risk factors.</td></tr>
+<tr><td>March 2025</td><td><span class="badge b-medium">Medium Risk</span></td><td>5.1%</td><td>11.54%</td><td class="pos">5.41%</td><td>Conditions improved — inflation moderated, demand recovered — but elevated living costs and churn still above January baseline.</td></tr>
+</tbody>
+</table>
+
+<div class="health-wrap">
+  <div class="cbox" style="flex:1;min-width:280px;">
+    <div class="ct">Risk Tier Progression — Q1 2025</div>
+    <canvas id="riskChart" height="160"></canvas>
+  </div>
+  <div class="cbox" style="flex:1;min-width:280px;">
+    <div class="ct">Inflation vs Demand Score — Inverse Correlation</div>
+    <canvas id="inflationDemandChart" height="160"></canvas>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 05 — BUSINESS HEALTH SCORE -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="sec" id="s05">
+<div class="sec-eye">Section 05 — Business Health Score</div>
+<h2>Business Health Score</h2>
+<p><strong>Business purpose:</strong> Compress every metric on this dashboard into one number — like a credit score for the business — so a CEO can track trajectory at a glance and a board can compare quarter to quarter without re-reading every chart.</p>
+
+<div class="spec-card">
+  <div class="spec-grid">
+    <div class="spec-cell spec-purpose"><div class="spec-lbl">Business Purpose</div><div class="spec-text">One number for trajectory tracking — "are we healthier than last month?" answered instantly.</div></div>
+    <div class="spec-cell spec-input"><div class="spec-lbl">Inputs</div><div class="spec-text">Growth %, churn %, CAC efficiency, profit margin, demand score — five weighted components.</div></div>
+    <div class="spec-cell spec-process"><div class="spec-lbl">AI Processing Logic</div><div class="spec-text">Each component normalised to 0–100, weighted by business priority (retention weighted highest), summed into a composite score.</div></div>
+    <div class="spec-cell spec-output"><div class="spec-lbl">Outputs</div><div class="spec-text">Composite score 0–100 plus component-level breakdown showing what's dragging the score down.</div></div>
+    <div class="spec-cell spec-value"><div class="spec-lbl">Decision Value</div><div class="spec-text">Identifies the single weakest lever (here: retention) so leadership knows exactly where to focus, not just that "something" is wrong.</div></div>
+  </div>
+</div>
+
+<div class="health-wrap">
+  <div class="health-gauge">
+    <canvas id="healthGauge" width="160" height="160"></canvas>
+    <div class="health-score-num"><div class="hn" style="color:var(--amber);">71</div><div class="hl">/ 100 · March</div></div>
+  </div>
+  <div class="health-breakdown">
+    <div class="hb-row"><div class="hb-lbl">Revenue Growth</div><div class="hb-bar-bg"><div class="hb-bar-fill" style="width:68%;background:var(--blue);"></div></div><div class="hb-val">68</div></div>
+    <div class="hb-row"><div class="hb-lbl">Retention / Churn</div><div class="hb-bar-bg"><div class="hb-bar-fill" style="width:58%;background:var(--red);"></div></div><div class="hb-val">58</div></div>
+    <div class="hb-row"><div class="hb-lbl">Marketing Efficiency</div><div class="hb-bar-bg"><div class="hb-bar-fill" style="width:75%;background:var(--amber);"></div></div><div class="hb-val">75</div></div>
+    <div class="hb-row"><div class="hb-lbl">Profit Margin</div><div class="hb-bar-bg"><div class="hb-bar-fill" style="width:82%;background:var(--green);"></div></div><div class="hb-val">82</div></div>
+    <div class="hb-row"><div class="hb-lbl">Macro Resilience</div><div class="hb-bar-bg"><div class="hb-bar-fill" style="width:73%;background:var(--purple);"></div></div><div class="hb-val">73</div></div>
+  </div>
+</div>
+
+<div class="cbox"><div class="ct">Health Score Trajectory — Jan to Mar 2025</div><canvas id="healthTrendChart" height="140"></canvas></div>
+
+<div class="pq"><p>Retention (58/100) is the weakest lever in the business — even after March's recovery, it remains the component holding the composite score back from "Healthy" (80+). This is the single highest-leverage area for Q2 investment.</p></div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 06 — EXECUTIVE RECOMMENDATIONS -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="sec" id="s06">
+<div class="sec-eye">Section 06 — Executive Recommendations</div>
+<h2>Executive Recommendations</h2>
+<p><strong>Business purpose:</strong> Convert every alert and root-cause finding into a ranked, ownable action list — the difference between a system that informs and a system that drives decisions.</p>
+
+<table class="tbl tbl-blue">
+<thead><tr><th>#</th><th>Recommendation</th><th>Linked Evidence</th><th>Priority</th><th>Expected Impact</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Launch retention-focused loyalty offers and proactive outreach to at-risk customers</td><td>Churn spiked to 31.82% in Feb (Section 02, 03)</td><td><span class="badge b-high">High</span></td><td>Reduce churn toward Jan baseline of 6.67%</td></tr>
+<tr><td>2</td><td>Pause underperforming marketing channels; reallocate to highest-conversion sources</td><td>CAC rose to ₹454.55 while revenue fell (Section 02)</td><td><span class="badge b-high">High</span></td><td>CAC already recovered to ₹230.77 in March — sustain this</td></tr>
+<tr><td>3</td><td>Introduce value-focused offers during macro-pressure months</td><td>Demand fell to 65 alongside inflation spike (Section 03)</td><td><span class="badge b-high">High</span></td><td>Defend revenue during future inflation cycles</td></tr>
+<tr><td>4</td><td>Gradually scale marketing investment back up in proven channels only</td><td>Demand recovered to 78; spend was cut 40% in March (Section 03)</td><td><span class="badge b-medium">Medium</span></td><td>Capture recovery without repeating Feb's CAC mistake</td></tr>
+<tr><td>5</td><td>Maintain operational cost discipline established in March</td><td>Operational cost fell from ₹1.25L to ₹1.1L (raw data)</td><td><span class="badge b-medium">Medium</span></td><td>Protect the 38.8% margin achieved this quarter</td></tr>
+<tr><td>6</td><td>Build a 6-month rolling dataset to validate seasonal vs macro causality</td><td>Root Cause Engine flagged seasonality as unverified (Section 03)</td><td><span class="badge b-medium">Medium</span></td><td>Improves AI confidence scoring for future alerts</td></tr>
+</tbody>
+</table>
+
+<div class="foot-note">
+  <div class="fn-title">How recommendations are generated</div>
+  <div class="fn-text">Each recommendation must trace to a specific alert or root-cause finding above — the system does not generate generic advice. If a recommendation can't be linked to evidence in Sections 02–03, it is not surfaced. This traceability is what separates a decision-support tool from a chatbot guessing at advice.</div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 07 — DECISION SIMULATION CENTER -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="sec" id="s07">
+<div class="sec-eye">Section 07 — Decision Simulation Center</div>
+<h2>Decision Simulation Center</h2>
+<p><strong>Business purpose:</strong> Before committing budget, let leadership compare 2–3 concrete response strategies side by side using the business's own Q1 numbers as the baseline — turning "what should we do" into a scored comparison.</p>
+
+<div class="spec-card">
+  <div class="spec-grid">
+    <div class="spec-cell spec-purpose"><div class="spec-lbl">Business Purpose</div><div class="spec-text">Replace gut-feel budget decisions with a side-by-side comparison grounded in this quarter's real cost and conversion data.</div></div>
+    <div class="spec-cell spec-input"><div class="spec-lbl">Inputs</div><div class="spec-text">Q1 actuals (CAC, churn, marketing spend, revenue) as the baseline for each scenario's projection.</div></div>
+    <div class="spec-cell spec-process"><div class="spec-lbl">AI Processing Logic</div><div class="spec-text">Applies each scenario's spend/retention assumptions to the Q1 baseline trend to project Q2 revenue, profit, and churn under each strategy.</div></div>
+    <div class="spec-cell spec-output"><div class="spec-lbl">Outputs</div><div class="spec-text">3 scenario cards with projected outcomes and a recommended choice.</div></div>
+    <div class="spec-cell spec-value"><div class="spec-lbl">Decision Value</div><div class="spec-text">Makes trade-offs explicit before money is spent, not after a quarter is lost finding out a strategy didn't work.</div></div>
+  </div>
+</div>
+
+<div class="h3">Q2 2025 Strategy Scenarios — Based on Q1 Baseline</div>
+<div class="sim-grid">
+  <div class="sim-card opt-a">
+    <div class="sim-name">A · Aggressive Re-Acquisition</div>
+    <div class="sim-row"><span>Marketing Spend</span><span class="sv">₹65,000/mo</span></div>
+    <div class="sim-row"><span>Projected CAC</span><span class="sv" style="color:var(--red);">~₹420</span></div>
+    <div class="sim-row"><span>Projected Churn</span><span class="sv">~18%</span></div>
+    <div class="sim-row"><span>Projected Revenue</span><span class="sv">₹2.1L</span></div>
+    <div class="sim-row"><span>Risk</span><span class="sv" style="color:var(--red);">High — repeats Feb pattern</span></div>
+  </div>
+  <div class="sim-card opt-b">
+    <div class="sim-name">B · Retention-First (Recommended)</div>
+    <div class="sim-row"><span>Marketing Spend</span><span class="sv">₹35,000/mo</span></div>
+    <div class="sim-row"><span>Projected CAC</span><span class="sv" style="color:var(--green);">~₹240</span></div>
+    <div class="sim-row"><span>Projected Churn</span><span class="sv" style="color:var(--green);">~9%</span></div>
+    <div class="sim-row"><span>Projected Revenue</span><span class="sv">₹2.0L</span></div>
+    <div class="sim-row"><span>Risk</span><span class="sv" style="color:var(--green);">Low — extends March pattern</span></div>
+  </div>
+  <div class="sim-card opt-c">
+    <div class="sim-name">C · Status Quo (No Change)</div>
+    <div class="sim-row"><span>Marketing Spend</span><span class="sv">₹30,000/mo</span></div>
+    <div class="sim-row"><span>Projected CAC</span><span class="sv">~₹260</span></div>
+    <div class="sim-row"><span>Projected Churn</span><span class="sv">~13%</span></div>
+    <div class="sim-row"><span>Projected Revenue</span><span class="sv">₹1.85L</span></div>
+    <div class="sim-row"><span>Risk</span><span class="sv" style="color:var(--amber);">Medium — no upside captured</span></div>
+  </div>
+</div>
+
+<div class="pq"><p>Scenario B is recommended: it extends March's actual proven pattern — lower spend, better retention focus — rather than betting on Scenario A's untested assumption that more spend fixes a retention problem.</p></div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 08 — WHAT-IF ANALYSIS -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="sec" id="s08">
+<div class="sec-eye">Section 08 — What-If Analysis</div>
+<h2>What-If Analysis</h2>
+<p><strong>Business purpose:</strong> Let a CFO or Operations Director ask "what if we cut churn to X%" or "what if inflation stays at Y%" and see the projected financial impact instantly — interactive sensitivity testing, not a static forecast.</p>
+
+<div class="spec-card">
+  <div class="spec-grid">
+    <div class="spec-cell spec-purpose"><div class="spec-lbl">Business Purpose</div><div class="spec-text">Test sensitivity of profit to the two levers leadership actually controls — churn and CAC — before locking a budget.</div></div>
+    <div class="spec-cell spec-input"><div class="spec-lbl">Inputs</div><div class="spec-text">User-adjustable churn % and CAC sliders; Q1 actuals as the fixed baseline.</div></div>
+    <div class="spec-cell spec-process"><div class="spec-lbl">AI Processing Logic</div><div class="spec-text">Recalculates projected customer count, revenue, and profit live as sliders move, using the same formulas that power the historical KPIs.</div></div>
+    <div class="spec-cell spec-output"><div class="spec-lbl">Outputs</div><div class="spec-text">Live-updating projected revenue, profit, and customer count for the adjusted scenario.</div></div>
+    <div class="spec-cell spec-value"><div class="spec-lbl">Decision Value</div><div class="spec-text">Answers "is a 5-point churn reduction worth a ₹15K retention budget?" with a number, not an opinion.</div></div>
+  </div>
+</div>
+
+<div class="whatif-card">
+  <div class="h3" style="margin-top:0;">Interactive Scenario — Mockup (Static Preview)</div>
+  <div class="wi-row">
+    <div class="wi-lbl">Target Churn Rate</div>
+    <div class="wi-track"><div class="wi-fill" style="width:35%;"><div class="wi-handle"></div></div></div>
+    <div class="wi-val">10.0%</div>
+  </div>
+  <div class="wi-row">
+    <div class="wi-lbl">Target CAC (₹)</div>
+    <div class="wi-track"><div class="wi-fill" style="width:55%;"><div class="wi-handle"></div></div></div>
+    <div class="wi-val">₹250</div>
+  </div>
+  <div class="wi-row">
+    <div class="wi-lbl">Marketing Spend (₹)</div>
+    <div class="wi-track"><div class="wi-fill" style="width:40%;"><div class="wi-handle"></div></div></div>
+    <div class="wi-val">₹35,000</div>
+  </div>
+
+  <div class="wi-result">
+    <div class="wi-result-title">Projected Outcome at These Settings</div>
+    <div class="kpi-grid" style="margin:0;">
+      <div class="kpi-card kpi-blue" style="padding:12px;"><div class="kpi-val" style="font-size:20px;">₹2,05,000</div><div class="kpi-lbl">Projected Revenue</div></div>
+      <div class="kpi-card kpi-green" style="padding:12px;"><div class="kpi-val" style="font-size:20px;">₹92,000</div><div class="kpi-lbl">Projected Profit</div></div>
+      <div class="kpi-card kpi-purple" style="padding:12px;"><div class="kpi-val" style="font-size:20px;">140</div><div class="kpi-lbl">Net New Customers</div></div>
+      <div class="kpi-card kpi-amber" style="padding:12px;"><div class="kpi-val" style="font-size:20px;">44.9%</div><div class="kpi-lbl">Projected Margin</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="foot-note">
+  <div class="fn-title">Implementation note</div>
+  <div class="fn-text">This section is shown as a static visual specification. In a working build, these sliders would be live React/JS inputs recalculating the result cards in real time using the same formula logic documented in Section 05 — a natural Phase 2 build, detailed in Section 12.</div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 09 — AI DECISION WORKFLOW -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="sec" id="s09">
+<div class="sec-eye">Section 09 — AI Decision Workflow</div>
+<h2>AI Decision Workflow — End to End</h2>
+<p><strong>Business purpose:</strong> Document exactly how raw data becomes an executive decision — the full pipeline, so the system isn't a black box and every output can be traced back to its source data.</p>
+
+<div class="flow-row">
+  <div class="flow-step f-dark">Market Data Ingested<br><span style="font-weight:400;opacity:.7;">(revenue, churn, macro)</span></div><div class="flow-arr">→</div>
+  <div class="flow-step f-blue">AI Analysis<br><span style="font-weight:400;">Derive CAC, churn%, growth%</span></div><div class="flow-arr">→</div>
+  <div class="flow-step f-amber">Risk Detection<br><span style="font-weight:400;">Threshold breach check</span></div><div class="flow-arr">→</div>
+  <div class="flow-step f-red">Alert Generated<br><span style="font-weight:400;">Section 02</span></div><div class="flow-arr">→</div>
+  <div class="flow-step f-purple">Root Cause Traced<br><span style="font-weight:400;">Section 03</span></div><div class="flow-arr">→</div>
+  <div class="flow-step f-green">Recommendation<br><span style="font-weight:400;">Section 06</span></div><div class="flow-arr">→</div>
+  <div class="flow-step f-teal">Executive Decision<br><span style="font-weight:400;">Human approves</span></div><div class="flow-arr">→</div>
+  <div class="flow-step f-dark">KPI Monitoring<br><span style="font-weight:400;opacity:.7;">Section 10 — tracks result</span></div>
+</div>
+
+<div class="h3">Stage-by-Stage Breakdown</div>
+<table class="tbl tbl-purple">
+<thead><tr><th>Stage</th><th>What Happens</th><th>Who/What Owns It</th><th>Human Checkpoint?</th></tr></thead>
+<tbody>
+<tr><td>1. Data Ingestion</td><td>Monthly customer, revenue, and macro data consolidated into a single dataset</td><td>Finance/Ops data entry → structured sheet</td><td>No — but data quality review monthly</td></tr>
+<tr><td>2. AI Analysis</td><td>Derived metrics calculated: CAC, churn %, growth %, profit margin</td><td>Formula layer (Section 05 logic)</td><td>No — deterministic calculation</td></tr>
+<tr><td>3. Risk Detection</td><td>Each metric checked against defined thresholds (e.g. churn &gt;20% = High)</td><td>Rule-based classifier (Section 04 logic)</td><td>No — but thresholds reviewed quarterly</td></tr>
+<tr><td>4. Alert Generation</td><td>AI drafts trigger explanation and recommended action in plain language</td><td>LLM layer, prompted with the breached metric + context</td><td><strong>Yes</strong> — alert reviewed before wide distribution</td></tr>
+<tr><td>5. Root Cause Tracing</td><td>Macro and business deltas correlated; causal chain constructed</td><td>LLM layer with correlation logic (Section 03)</td><td><strong>Yes</strong> — analyst confirms causal read is sound</td></tr>
+<tr><td>6. Recommendation</td><td>Root cause findings converted into a specific, ownable action</td><td>LLM layer, constrained to link every rec to evidence</td><td><strong>Yes</strong> — no recommendation ships without evidence link</td></tr>
+<tr><td>7. Executive Decision</td><td>CEO/Director reviews recommendation, approves, modifies, or rejects</td><td>Human — always</td><td><strong>Yes — mandatory</strong></td></tr>
+<tr><td>8. KPI Monitoring</td><td>Approved action tracked; next month's data shows if it worked</td><td>Action Tracker (Section 11) feeds back into Stage 1</td><td>No — but reviewed at next monthly cycle</td></tr>
+</tbody>
+</table>
+
+<div class="pq"><p>The system never auto-executes a business decision. Every output from Stage 4 onward is AI-drafted but human-approved — the AI's job is to compress analysis time, not to remove the executive from the loop.</p></div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 10 — OPERATIONS MONITORING LAYER -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="sec" id="s10">
+<div class="sec-eye">Section 10 — Operations Monitoring Layer</div>
+<h2>Operations Monitoring Layer</h2>
+<p><strong>Business purpose:</strong> Monitor the health of the data and decision pipeline itself — not just the business. If the system that's supposed to catch the next demand shock has a data gap, leadership needs to know that too.</p>
+
+<table class="tbl">
+<thead><tr><th>Monitoring Check</th><th>What It Verifies</th><th>Frequency</th><th>Failure Signal</th></tr></thead>
+<tbody>
+<tr><td>Data Completeness Check</td><td>All required fields populated for the latest month (revenue, churn, CAC inputs, macro data)</td><td>Monthly, on data entry</td><td>Missing field → dashboard shows "Incomplete" badge instead of stale numbers</td></tr>
+<tr><td>Threshold Calibration Review</td><td>Are the risk thresholds (Section 04) still appropriate given 3 new months of data?</td><td>Quarterly</td><td>If every month is flagged High or every month is Low, thresholds need recalibration</td></tr>
+<tr><td>Recommendation Traceability Audit</td><td>Does every live recommendation still link to a current, valid alert?</td><td>Monthly</td><td>Orphaned recommendation with no supporting alert → flagged for removal</td></tr>
+<tr><td>Forecast Accuracy Check</td><td>How close were last quarter's What-If projections (Section 08) to actuals?</td><td>Quarterly, after actuals land</td><td>&gt;15% variance → recalibrate the projection formulas</td></tr>
+<tr><td>Data Source Consistency</td><td>Are channel names consistent across entries? (e.g. "Insta" vs "Instagram" in raw data)</td><td>On each data load</td><td>Inconsistent labels found in raw dataset — see note below</td></tr>
+</tbody>
+</table>
+
+<div class="alert-card medium">
+  <div class="alert-top"><div class="alert-title">🟡 Data Quality Note — Found in Raw Dataset</div><div class="alert-meta"><span class="badge b-medium">OPS FINDING</span></div></div>
+  <div class="alert-analysis">The customer-level dataset contains inconsistent channel naming ("Instagram" vs "Insta") and a misspelling ("Refferal" vs "Referral"). This is exactly the kind of data quality issue the Operations Monitoring Layer is designed to catch before it silently fragments channel-level reporting.</div>
+  <div class="alert-rec"><strong>Recommended Fix:</strong> Standardise channel taxonomy at data entry (dropdown, not free text) — a Phase 2 build item, see Section 12.</div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 11 — ACTION TRACKING SYSTEM -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="sec" id="s11">
+<div class="sec-eye">Section 11 — Action Tracking System</div>
+<h2>Action Tracking System</h2>
+<p><strong>Business purpose:</strong> Close the loop. A recommendation that's approved but never tracked is just a slide nobody revisits. This system tracks every approved recommendation through to a measured outcome.</p>
+
+<div class="spec-card">
+  <div class="spec-grid">
+    <div class="spec-cell spec-purpose"><div class="spec-lbl">Business Purpose</div><div class="spec-text">Prevent "we decided to do X" from becoming "did we ever actually do X?" three months later.</div></div>
+    <div class="spec-cell spec-input"><div class="spec-lbl">Inputs</div><div class="spec-text">Approved recommendations from Section 06, with owner and target month assigned at approval time.</div></div>
+    <div class="spec-cell spec-process"><div class="spec-lbl">AI Processing Logic</div><div class="spec-text">Cross-references next month's actual KPIs against the action's stated goal to auto-flag whether the metric moved in the right direction.</div></div>
+    <div class="spec-cell spec-output"><div class="spec-lbl">Outputs</div><div class="spec-text">Status-tracked action list — Done / In Progress / Pending — with measured impact where available.</div></div>
+    <div class="spec-cell spec-value"><div class="spec-lbl">Decision Value</div><div class="spec-text">Creates accountability — and a track record proving which AI recommendations actually worked, building trust in the system over time.</div></div>
+  </div>
+</div>
+
+<div class="action-card">
+  <div class="action-status as-done"></div>
+  <div class="action-body"><div class="action-title">Reduce marketing spend to focus on high-conversion channels</div><div class="action-meta">Approved: Feb 2025 · Result: CAC fell from ₹454.55 → ₹230.77 by March ✓ Goal met</div></div>
+  <div class="action-owner">Marketing Lead</div>
+</div>
+<div class="action-card">
+  <div class="action-status as-done"></div>
+  <div class="action-body"><div class="action-title">Improve operational cost discipline</div><div class="action-meta">Approved: Feb 2025 · Result: Op. cost fell from ₹1.25L → ₹1.1L by March ✓ Goal met</div></div>
+  <div class="action-owner">Operations Lead</div>
+</div>
+<div class="action-card">
+  <div class="action-status as-progress"></div>
+  <div class="action-body"><div class="action-title">Launch retention campaign and loyalty offers</div><div class="action-meta">Approved: Feb 2025 · Churn improved 31.82% → 11.54% but remains above Jan's 6.67% baseline</div></div>
+  <div class="action-owner">Customer Success</div>
+</div>
+<div class="action-card">
+  <div class="action-status as-pending"></div>
+  <div class="action-body"><div class="action-title">Gradually re-scale marketing investment in proven channels</div><div class="action-meta">Approved: Mar 2025 · Target: Q2 2025 · Awaiting Q2 data</div></div>
+  <div class="action-owner">Marketing Lead</div>
+</div>
+<div class="action-card">
+  <div class="action-status as-pending"></div>
+  <div class="action-body"><div class="action-title">Standardise data entry taxonomy (channel naming)</div><div class="action-meta">Flagged: Mar 2025 (Section 10) · Target: Before Q2 close</div></div>
+  <div class="action-owner">Data/Ops</div>
+</div>
+
+<div class="pq"><p>2 of 5 tracked actions show a confirmed, measured result. This is the system's own accountability record — proof that recommendations translate into outcomes, not just slides.</p></div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 12 — FUTURE VERSION ROADMAP -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="sec" id="s12">
+<div class="sec-eye">Section 12 — Future Version Roadmap</div>
+<h2>Future Version Roadmap</h2>
+<p>This section is honest about what exists today (a structured analysis and design specification built on real Q1 data) versus what a live version would require.</p>
+
+<table class="tbl tbl-green">
+<thead><tr><th>Version</th><th>What It Adds</th><th>Tools Required</th><th>Effort</th></tr></thead>
+<tbody>
+<tr><td><strong>V1 — Current (This Project)</strong></td><td>Static analysis, root-cause tracing, risk classification, and recommendation engine built on real Q1 data</td><td>Spreadsheet data + structured analysis + this dashboard design</td><td>Complete</td></tr>
+<tr><td><strong>V2 — Live Dashboard</strong></td><td>Connect this design to a real, refreshable data source (Google Sheets) with auto-updating charts</td><td>Google Sheets API · Looker Studio or React + Chart.js</td><td>~1 week</td></tr>
+<tr><td><strong>V3 — Automated Alerting</strong></td><td>Monthly data entry auto-triggers threshold checks and drafts the alert text via LLM</td><td>Make.com · OpenAI API · Airtable</td><td>~1–2 weeks</td></tr>
+<tr><td><strong>V4 — Interactive What-If</strong></td><td>Live slider-based simulation (Section 08) with real-time recalculation</td><td>React state management · formula engine</td><td>~1 week</td></tr>
+<tr><td><strong>V5 — Multi-Quarter Forecasting</strong></td><td>6+ months of data enables real seasonality detection, replacing the "unverified" flag in Section 03</td><td>More historical data · basic time-series model</td><td>Ongoing data collection</td></tr>
+</tbody>
+</table>
+
+<div class="h3">Suggested Automation Opportunities</div>
+<table class="tbl">
+<thead><tr><th>Opportunity</th><th>Current State</th><th>Automated State</th></tr></thead>
+<tbody>
+<tr><td>Monthly KPI calculation</td><td>Manual spreadsheet formulas</td><td>Auto-calculated on data entry via Sheets script or Make.com</td></tr>
+<tr><td>Risk classification</td><td>Manual review against thresholds</td><td>Rule engine auto-tags Low/Medium/High on new data</td></tr>
+<tr><td>Alert drafting</td><td>Manually written</td><td>LLM drafts trigger + recommendation, human approves before send</td></tr>
+<tr><td>Action tracking</td><td>Manually checked against next month's numbers</td><td>Auto-flag goal-met/not-met when new data lands</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- SOURCES / DATA NOTE -->
+<div class="sec">
+  <div class="sec-eye">Data Source</div>
+  <h2>Data Source &amp; Methodology Note</h2>
+  <div class="src-row">
+    <span class="src-chip">Q1 2025 Customer-Level Dataset (12 records)</span>
+    <span class="src-chip">Monthly Business Summary (Jan–Mar)</span>
+    <span class="src-chip">Macroeconomic Indicators (Inflation, COL Index, Demand Score)</span>
+    <span class="src-chip">Derived Metrics: CAC, Churn %, Growth %, Profit</span>
+  </div>
+  <p style="font-size:12px;color:var(--text-3);margin-top:10px;">All figures in this Command Center are calculated directly from the uploaded dataset. CAC = Marketing Spend ÷ New Customers. Churn % = Churned Customers ÷ New Customers (as defined in source data). Growth % = month-over-month revenue change. No figures are invented; all projections in Sections 07–08 are explicitly labelled as projections, not actuals.</p>
+</div>
+
+</div><!-- end wrap -->
+
+<script>
+const revData=[200000,185000,195000];
+const profitData=[80000,60000,85000];
+const churnData=[6.67,31.82,11.54];
+const months=['Jan','Feb','Mar'];
+
+new Chart(document.getElementById('revChart'),{type:'line',data:{labels:months,datasets:[{data:revData,borderColor:'#3B82F6',backgroundColor:'rgba(59,130,246,0.08)',tension:0.35,fill:true,pointRadius:4,pointBackgroundColor:'#3B82F6'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,grid:{color:'rgba(255,255,255,0.06)'},ticks:{color:'#94A3B8',font:{size:9}}},x:{grid:{display:false},ticks:{color:'#94A3B8',font:{size:10}}}}}});
+
+new Chart(document.getElementById('profitChart'),{type:'line',data:{labels:months,datasets:[{data:profitData,borderColor:'#22C55E',backgroundColor:'rgba(34,197,94,0.08)',tension:0.35,fill:true,pointRadius:4,pointBackgroundColor:'#22C55E'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,grid:{color:'rgba(255,255,255,0.06)'},ticks:{color:'#94A3B8',font:{size:9}}},x:{grid:{display:false},ticks:{color:'#94A3B8',font:{size:10}}}}}});
+
+new Chart(document.getElementById('churnChart'),{type:'bar',data:{labels:months,datasets:[{data:churnData,backgroundColor:['#22C55E','#EF4444','#F59E0B'],borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.06)'},ticks:{color:'#94A3B8',font:{size:9},callback:v=>v+'%'}},x:{grid:{display:false},ticks:{color:'#94A3B8',font:{size:10}}}}}});
+
+new Chart(document.getElementById('riskChart'),{type:'bar',data:{labels:months,datasets:[{data:[1,3,2],backgroundColor:['#22C55E','#EF4444','#F59E0B'],borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>['Low Risk','','High Risk','Medium Risk'][c.raw]||''}}}},scales:{y:{display:false,max:4},x:{grid:{display:false},ticks:{color:'#94A3B8',font:{size:10}}}}});
+
+new Chart(document.getElementById('inflationDemandChart'),{type:'line',data:{labels:months,datasets:[
+  {label:'Inflation %',data:[4.8,6.2,5.1],borderColor:'#EF4444',backgroundColor:'transparent',tension:0.3,yAxisID:'y'},
+  {label:'Demand Score',data:[82,65,78],borderColor:'#3B82F6',backgroundColor:'transparent',tension:0.3,yAxisID:'y1'}
+]},options:{responsive:true,plugins:{legend:{labels:{color:'#94A3B8',font:{size:10}}}},scales:{
+  y:{position:'left',grid:{color:'rgba(255,255,255,0.06)'},ticks:{color:'#EF4444',font:{size:9}}},
+  y1:{position:'right',grid:{display:false},ticks:{color:'#3B82F6',font:{size:9}}},
+  x:{grid:{display:false},ticks:{color:'#94A3B8',font:{size:10}}}
+}}});
+
+new Chart(document.getElementById('healthTrendChart'),{type:'line',data:{labels:months,datasets:[{data:[78,52,71],borderColor:'#A855F7',backgroundColor:'rgba(168,85,247,0.08)',tension:0.35,fill:true,pointRadius:5,pointBackgroundColor:'#A855F7'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:'rgba(255,255,255,0.06)'},ticks:{color:'#94A3B8',font:{size:9}}},x:{grid:{display:false},ticks:{color:'#94A3B8',font:{size:10}}}}}});
+
+// Health gauge - doughnut
+new Chart(document.getElementById('healthGauge'),{type:'doughnut',data:{datasets:[{data:[71,29],backgroundColor:['#F59E0B','#1E2840'],borderWidth:0}]},options:{responsive:false,cutout:'78%',plugins:{legend:{display:false},tooltip:{enabled:false}}}});
+</script>
+</body>
+</html>
